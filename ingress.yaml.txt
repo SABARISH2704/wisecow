@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wisecow-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "encryption"
+spec:
+  tls:
+  - hosts:
+    - wisecow.application.com
+    secretName: wisecow-tls
+  rules:
+  - host: wisecow.application.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wisecow
+            port: 
+              number: 4499
