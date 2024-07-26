@@ -16,7 +16,7 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        docker build -t sabarish2704:${{ github.sha }} .
+        docker build -t wisecow:${{ github.sha }} .
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
         docker push sabarish2704/wisecow/wisecow:${{ github.sha }}
     
