@@ -1,0 +1,71 @@
+SYSTEM HEALTH MONITORING:
+------------------------
+#!/bin/bash
+
+# Define thresholds
+CPU_THRESHOLD=80
+MEM_THRESHOLD=80
+DISK_THRESHOLD=90
+
+# Function to send alert
+send_alert() {
+    echo "[$(date)] ALERT: $1" >> /var/log/system_health.log
+    echo "ALERT: $1"
+}
+
+# Check CPU usage
+cpu_usage=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
+if (( $(echo "$cpu_usage > $CPU_THRESHOLD" | bc -l) )); then
+    send_alert "CPU usage is high: $cpu_usage%"
+fi
+
+# Check memory usage
+mem_usage=$(free | grep Mem | awk '{print $3/$2 * 100.0}')
+if (( $(echo "$mem_usage > $MEM_THRESHOLD" | bc -l) )); then
+    send_alert "Memory usage is high: $mem_usage%"
+fi
+
+# Check disk space
+disk_usage=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
+if [ "$disk_usage" -gt "$DISK_THRESHOLD" ]; then
+    send_alert "Disk usage is high: $disk_usage%"
+fi
+
+# Check for zombie processes
+zombie_count=$(ps aux | awk '{print $8}' | grep -c Z)
+if [ "$zombie_count" -gt 0 ]; then
+    send_alert "There are $zombie_count zombie processes"
+fi
+
+echo "System health check completed."
+--------------------------------------------------------------------------------------------------------------------
+APPLICARION HEALTH MONITOR:
+-----------------------------
+#!/bin/bash
+
+# URL of the application to check
+APP_URL=" "
+
+# Function to check application status
+check_app_status() {
+    http_code=$(curl -o /dev/null -s -w "%{http_code}" $APP_URL)
+    
+    if [[ $http_code == 2* ]]; then
+        echo "UP"
+    else
+        echo "DOWN"
+    fi
+}
+
+# Main execution
+status=$(check_app_status)
+
+if [ "$status" == "UP" ]; then
+    echo "Application is UP and functioning correctly."
+else
+    echo "Application is DOWN or not responding properly."
+fi
+
+# Additional information
+echo "HTTP Status Code: $http_code"
+echo "Timestamp: $(date)"
